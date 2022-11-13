@@ -8,6 +8,19 @@ Watch on full [React Firebase Chat Tutorial](https://youtu.be/zQyrwxMPm88) on Yo
 
 # Quickstart
 
+To update the dependencies (optional):
+
+
+``
+npm install -g npm-check-updates
+``
+
+``
+ncu -u
+``
+
+To run the dev server:
+
 ``
 npm install
 ``
