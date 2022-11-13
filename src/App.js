@@ -1,10 +1,10 @@
 import React, { useRef, useState } from 'react';
 import './App.css';
 
-import firebase from 'firebase/app';
-import 'firebase/firestore';
-import 'firebase/auth';
-import 'firebase/analytics';
+import firebase from 'firebase/compat/app';
+import 'firebase/compat/firestore';
+import 'firebase/compat/auth';
+import 'firebase/compat/analytics';
 
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { useCollectionData } from 'react-firebase-hooks/firestore';
@@ -12,6 +12,7 @@ import { useCollectionData } from 'react-firebase-hooks/firestore';
 firebase.initializeApp({
   apiKey: "AIzaSyBITNoj6QfTnW2mumukkj0Be3rwD0LF0g4",
   authDomain: "bhacks2022table52.firebaseapp.com",
+  databaseURL: "https://bhacks2022table52.firebaseio.com",
   projectId: "bhacks2022table52",
   storageBucket: "bhacks2022table52.appspot.com",
   messagingSenderId: "976236952823",
