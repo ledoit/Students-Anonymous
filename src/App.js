@@ -1,132 +1,65 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
+
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+} from 'react-router-dom';
+
+import { onAuthStateChanged } from 'firebase/auth';
+
+// import the bootstrap styles from node_modules folder
+import 'bootstrap/dist/css/bootstrap.css';
+import 'bootstrap/dist/js/bootstrap.js';
+import 'bootstrap-icons/font/bootstrap-icons.css';
+
+import { auth } from './firebase/firebase';
+
 import './App.css';
 
-import firebase from 'firebase/compat/app';
-import 'firebase/compat/firestore';
-import 'firebase/compat/auth';
-import 'firebase/compat/analytics';
+// import page components
+import ChatsPage from './components/chats/ChatsPage';
+import RegisterPage from './components/auth/RegisterPage';
+import LoginPage from './components/auth/LoginPage';
+import Navbar from './components/common/Navbar';
+import RequireAuth from './components/common/RequireAuth';
+import Spinner from './components/common/Spinner';
 
-import { useAuthState } from 'react-firebase-hooks/auth';
-import { useCollectionData } from 'react-firebase-hooks/firestore';
+export default function App() {
 
-firebase.initializeApp({
-  apiKey: "AIzaSyBITNoj6QfTnW2mumukkj0Be3rwD0LF0g4",
-  authDomain: "bhacks2022table52.firebaseapp.com",
-  databaseURL: "https://bhacks2022table52.firebaseio.com",
-  projectId: "bhacks2022table52",
-  storageBucket: "bhacks2022table52.appspot.com",
-  messagingSenderId: "976236952823",
-  appId: "1:976236952823:web:92d1745f3be2be079b67f2",
-  measurementId: "G-CNRRYVNCVH"
-})
+  const [user, setUser] = useState(null);
+  const [isUserSet, setIsUserSet] = useState(false);
 
-const auth = firebase.auth();
-const firestore = firebase.firestore();
-const analytics = firebase.analytics();
+  useEffect(() => {
+    const unsub = onAuthStateChanged(auth, (user) => {
+      setUser(user);
+      setIsUserSet(true);
+    });
 
-
-
-
-function App() {
-
-  const [user] = useAuthState(auth);
+    return () => unsub();
+  }, []);
 
   return (
-    <div className="App">
-      <header>
-        <h1>⚛️🔥💬</h1>
-        <SignOut />
-      </header>
+    <BrowserRouter>
+      <Navbar user={user} />
+      {
+        isUserSet ?
+          <Routes>
+            <Route path="/" element={
+              <RequireAuth user={user}>
+                <ChatsPage user={user} />
+              </RequireAuth>
+            } />
 
-      <section>
-        {user ? <ChatRoom /> : <SignIn />}
-      </section>
+            <Route path="/register" element={<RegisterPage />} />
+            <Route path="/login" element={<LoginPage />} />
+          </Routes>
+          :
+          <div className='text-center m-4'>
+            <Spinner />
+          </div>
+      }
 
-    </div>
-  );
-}
-
-function SignIn() {
-
-  const signInWithGoogle = () => {
-    const provider = new firebase.auth.GoogleAuthProvider();
-    auth.signInWithPopup(provider);
-  }
-
-  return (
-    <>
-      <button className="sign-in" onClick={signInWithGoogle}>Sign in with Google</button>
-      <p>Do not violate the community guidelines or you will be banned for life!</p>
-    </>
-  )
-
-}
-
-function SignOut() {
-  return auth.currentUser && (
-    <button className="sign-out" onClick={() => auth.signOut()}>Sign Out</button>
+    </BrowserRouter>
   )
 }
-
-
-function ChatRoom() {
-  const dummy = useRef();
-  const messagesRef = firestore.collection('messages');
-  const query = messagesRef.orderBy('createdAt').limit(25);
-
-  const [messages] = useCollectionData(query, { idField: 'id' });
-
-  const [formValue, setFormValue] = useState('');
-
-
-  const sendMessage = async (e) => {
-    e.preventDefault();
-
-    const { uid, photoURL } = auth.currentUser;
-
-    await messagesRef.add({
-      text: formValue,
-      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-      uid,
-      photoURL
-    })
-
-    setFormValue('');
-    dummy.current.scrollIntoView({ behavior: 'smooth' });
-  }
-
-  return (<>
-    <main>
-
-      {messages && messages.map(msg => <ChatMessage key={msg.id} message={msg} />)}
-
-      <span ref={dummy}></span>
-
-    </main>
-
-    <form onSubmit={sendMessage}>
-
-      <input value={formValue} onChange={(e) => setFormValue(e.target.value)} placeholder="say something nice" />
-
-      <button type="submit" disabled={!formValue}>🕊️</button>
-
-    </form>
-  </>)
-}
-
-
-function ChatMessage(props) {
-  const { text, uid, photoURL } = props.message;
-
-  const messageClass = uid === auth.currentUser.uid ? 'sent' : 'received';
-
-  return (<>
-    <div className={`message ${messageClass}`}>
-      <img src={photoURL || 'https://api.adorable.io/avatars/23/abott@adorable.png'} />
-      <p>{text}</p>
-    </div>
-  </>)
-}
-
-
-export default App;
